@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { Panel } from 'react-bootstrap';
+import { Panel, Alert } from 'react-bootstrap';
 import visMap from '../../../visualizations/main';
 import { d3format } from '../../modules/utils';
 import ExploreActionButtons from '../../explore/components/ExploreActionButtons';
@@ -24,6 +24,7 @@ const propTypes = {
   data: PropTypes.any,
   isChartLoading: PropTypes.bool,
   isStarred: PropTypes.bool.isRequired,
+  alert: PropTypes.string,
 };
 
 class ChartContainer extends React.Component {
@@ -107,28 +108,12 @@ class ChartContainer extends React.Component {
         // finished rendering callback
       },
 
-      error(msg, xhr) {
-        let errorMsg = msg;
-        let errHtml = '';
-        try {
-          const o = JSON.parse(msg);
-          if (o.error) {
-            errorMsg = o.error;
-          }
-        } catch (e) {
-          // pass
-        }
-        errHtml = `<div class="alert alert-danger">${errorMsg}</div>`;
-        if (xhr) {
-          const extendedMsg = this.getErrorMsg(xhr);
-          if (extendedMsg) {
-            errHtml += `<div class="alert alert-danger">${extendedMsg}</div>`;
-          }
-        }
-        $(this.state.selector).html(errHtml);
-        this.render();
-        $('span.query').removeClass('disabled');
-        $('.query-and-save button').removeAttr('disabled');
+      clearError: () => {
+        this.props.actions.removeChartAlert();
+      },
+
+      error(msg) {
+        this.props.actions.chartUpdateFailed(msg);
       },
 
       d3format: (col, number) => {
@@ -139,6 +124,9 @@ class ChartContainer extends React.Component {
     };
   }
 
+  removeAlert() {
+    this.props.actions.removeChartAlert();
+  }
 
   renderVis() {
     visMap[this.props.viz_type](this.state.mockSlice).render();
@@ -183,6 +171,16 @@ class ChartContainer extends React.Component {
             </div>
           }
         >
+          {this.props.alert &&
+            <Alert bsStyle="warning">
+              {this.props.alert}
+              <i
+                className="fa fa-close pull-right"
+                onClick={this.removeAlert.bind(this)}
+                style={{ cursor: 'pointer' }}
+              />
+            </Alert>
+          }
           {!this.props.isChartLoading &&
             <div
               id={this.props.containerId}
@@ -213,11 +211,8 @@ function mapStateToProps(state) {
     data: state.viz.data,
     isChartLoading: state.isChartLoading,
     isStarred: state.isStarred,
+    alert: state.chartAlert,
   };
 }
 
-function mapDispatchToProps() {
-  return {};
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(ChartContainer);
+export default connect(mapStateToProps, () => ({}))(ChartContainer);

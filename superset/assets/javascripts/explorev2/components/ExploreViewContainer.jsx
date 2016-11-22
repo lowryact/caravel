@@ -5,6 +5,7 @@ import * as actions from '../actions/exploreActions';
 import { connect } from 'react-redux';
 import ChartContainer from './ChartContainer';
 import ControlPanelsContainer from './ControlPanelsContainer';
+import SaveModal from './SaveModal';
 import QueryAndSaveBtns from '../../explore/components/QueryAndSaveBtns';
 const $ = require('jquery');
 
@@ -20,6 +21,7 @@ class ExploreViewContainer extends React.Component {
     super(props);
     this.state = {
       height: this.getHeight(),
+      showModal: false,
     };
   }
 
@@ -41,6 +43,9 @@ class ExploreViewContainer extends React.Component {
 
     const params = $.param(data, true);
     this.updateUrl(params);
+    // remove alerts when query
+    this.props.actions.removeControlPanelAlert();
+    this.props.actions.removeChartAlert();
   }
 
   getHeight() {
@@ -60,6 +65,10 @@ class ExploreViewContainer extends React.Component {
       this.props.datasource_type, this.props.form_data.datasource, data);
   }
 
+  toggleModal() {
+    this.setState({ showModal: !this.state.showModal });
+  }
+
   render() {
     return (
       <div
@@ -69,22 +78,33 @@ class ExploreViewContainer extends React.Component {
           overflow: 'hidden',
         }}
       >
+      {this.state.showModal &&
+        <SaveModal
+          onHide={this.toggleModal.bind(this)}
+          actions={this.props.actions}
+          form_data={this.props.form_data}
+          datasource_type={this.props.datasource_type}
+        />
+      }
         <div className="row">
           <div className="col-sm-4">
             <QueryAndSaveBtns
               canAdd="True"
               onQuery={this.onQuery.bind(this)}
+              onSave={this.toggleModal.bind(this)}
             />
             <br /><br />
             <ControlPanelsContainer
               actions={this.props.actions}
               form_data={this.props.form_data}
+              datasource_type={this.props.datasource_type}
             />
           </div>
           <div className="col-sm-8">
             <ChartContainer
               actions={this.props.actions}
               height={this.state.height}
+              actions={this.props.actions}
             />
           </div>
         </div>
@@ -108,6 +128,5 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export { ControlPanelsContainer };
-
+export { ExploreViewContainer };
 export default connect(mapStateToProps, mapDispatchToProps)(ExploreViewContainer);

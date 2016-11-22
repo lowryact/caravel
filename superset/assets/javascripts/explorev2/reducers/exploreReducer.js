@@ -18,7 +18,23 @@ export const exploreReducer = function (state, action) {
 
     [actions.FETCH_FAILED]() {
       // todo(alanna) handle failure/error state
-      return Object.assign({}, state, { isDatasourceMetaLoading: false });
+      return Object.assign({}, state,
+        {
+          isDatasourceMetaLoading: false,
+          controlPanelAlert: action.error,
+        });
+    },
+    [actions.REMOVE_CONTROL_PANEL_ALERT]() {
+      return Object.assign({}, state, { controlPanelAlert: null });
+    },
+
+    [actions.FETCH_DASHBOARDS_SUCCEEDED]() {
+      return Object.assign({}, state, { dashboards: action.choices });
+    },
+
+    [actions.FETCH_DASHBOARDS_FAILED]() {
+      return Object.assign({}, state,
+        { saveModalAlert: `fetching dashboards failed for ${action.userId}` });
     },
 
     [actions.SET_FIELD_OPTIONS]() {
@@ -60,6 +76,9 @@ export const exploreReducer = function (state, action) {
         newFormData.slice_name = state.viz.form_data.slice_name;
         newFormData.viz_type = state.viz.form_data.viz_type;
       }
+      if (action.key === 'viz_type') {
+        newFormData.previous_viz_type = state.viz.form_data.viz_type;
+      }
       newFormData[action.key] = action.value ? action.value : (!state.viz.form_data[action.key]);
       return Object.assign(
         {},
@@ -88,7 +107,16 @@ export const exploreReducer = function (state, action) {
       return Object.assign({}, state, { isChartLoading: true });
     },
     [actions.CHART_UPDATE_FAILED]() {
-      return Object.assign({}, state, { isChartLoading: false });
+      return Object.assign({}, state, { isChartLoading: false, chartAlert: action.error });
+    },
+    [actions.REMOVE_CHART_ALERT]() {
+      return Object.assign({}, state, { chartAlert: null });
+    },
+    [actions.SAVE_SLICE_FAILED]() {
+      return Object.assign({}, state, { saveModalAlert: 'Failed to save slice' });
+    },
+    [actions.REMOVE_SAVE_MODAL_ALERT]() {
+      return Object.assign({}, state, { saveModalAlert: null });
     },
   };
   if (action.type in actionHandlers) {
